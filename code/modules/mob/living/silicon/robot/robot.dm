@@ -3,9 +3,8 @@
 	real_name = "Cyborg"
 	icon = 'icons/mob/robots.dmi'
 	icon_state = "robot"
-	maxHealth = 100
-	health = 100
 	bubble_icon = "robot"
+<<<<<<< HEAD
 	designation = "Default" //used for displaying the prefix & getting the current module of cyborg
 	has_limbs = 1
 	hud_type = /datum/hud/robot
@@ -119,6 +118,8 @@
 	var/orebox = null
 
 /mob/living/silicon/robot
+=======
+>>>>>>> afbbde610a... Merge pull request #12201 from Ghommie/Ghommie-cit740
 
 /mob/living/silicon/robot/get_cell()
 	return cell
