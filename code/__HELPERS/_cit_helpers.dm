@@ -105,6 +105,7 @@ GLOBAL_VAR_INIT(miscreants_allowed, FALSE)
 		if(!src.holder)	return
 		message_admins("[key_name_admin(usr)] manually reloaded mentors")
 
+<<<<<<< HEAD
 //LOOC toggles
 /client/verb/listen_looc()
 	set name = "Show/Hide LOOC"
@@ -116,6 +117,9 @@ GLOBAL_VAR_INIT(miscreants_allowed, FALSE)
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "TLOOC") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /mob/living/carbon/has_penis() // Skyrat Change
+=======
+/mob/living/carbon/proc/has_penis()
+>>>>>>> cd46bce126... Merge pull request #11890 from Ghommie/Ghommie-cit685
 	var/obj/item/organ/genital/G = getorganslot(ORGAN_SLOT_PENIS)
 	if(G && istype(G, /obj/item/organ/genital/penis))
 		return TRUE

@@ -5,7 +5,11 @@
 	name = "white beanie"
 	desc = "A stylish beanie. The perfect winter accessory for those with a keen fashion sense, and those who just can't handle a cold breeze on their heads."
 	icon_state = "beanie" //Default white
+<<<<<<< HEAD
 	dynamic_hair_suffix = "+generic" // Skyrat change
+=======
+	custom_price = 60
+>>>>>>> cd46bce126... Merge pull request #11890 from Ghommie/Ghommie-cit685
 
 /obj/item/clothing/head/beanie/black
 	name = "black beanie"

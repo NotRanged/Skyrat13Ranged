@@ -294,7 +294,11 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 	buttons_locked	= sanitize_integer(buttons_locked, 0, 1, initial(buttons_locked))
 	windowflashing		= sanitize_integer(windowflashing, 0, 1, initial(windowflashing))
 	default_slot	= sanitize_integer(default_slot, 1, max_save_slots, initial(default_slot))
+<<<<<<< HEAD
 	toggles			= sanitize_integer(toggles, 0, 16777215, initial(toggles)) // skyrat - its 24 bit ree
+=======
+	toggles			= sanitize_integer(toggles, 0, 16777215, initial(toggles))
+>>>>>>> cd46bce126... Merge pull request #11890 from Ghommie/Ghommie-cit685
 	clientfps		= sanitize_integer(clientfps, 0, 1000, 0)
 	if (clientfps == 0) clientfps = world.fps*2 // Skyrat edit
 	parallax		= sanitize_integer(parallax, PARALLAX_INSANE, PARALLAX_DISABLE, null)
@@ -317,7 +321,11 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 	damagescreenshake	= sanitize_integer(damagescreenshake, 0, 2, initial(damagescreenshake))
 	widescreenpref		= sanitize_integer(widescreenpref, 0, 1, initial(widescreenpref))
 	autostand			= sanitize_integer(autostand, 0, 1, initial(autostand))
+<<<<<<< HEAD
 	cit_toggles			= sanitize_integer(cit_toggles, 0, 16777215, initial(cit_toggles)) // skyrate - its 24 bit ree
+=======
+	cit_toggles			= sanitize_integer(cit_toggles, 0, 16777215, initial(cit_toggles))
+>>>>>>> cd46bce126... Merge pull request #11890 from Ghommie/Ghommie-cit685
 	auto_ooc			= sanitize_integer(auto_ooc, 0, 1, initial(auto_ooc))
 	no_tetris_storage		= sanitize_integer(no_tetris_storage, 0, 1, initial(no_tetris_storage))
 
