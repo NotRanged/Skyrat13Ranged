@@ -1,3 +1,13 @@
+#define BSM_POWER_USAGE_SIMPLE 200000 				// 200 kW, base rate, multiplied by part efficiency
+#define BSM_POWER_USAGE_INTERMEDIATE 400000 		// 400 kW
+#define BSM_POWER_USAGE_ADVANCED 500000 			// 500 kW
+#define BSM_POWER_USAGE_EXPERIMENTAL 300000 		// 250 kW, lower due to increased risk/difficulty in setup
+#define HEATING_POWER_SIMPLE 0
+#define HEATING_POWER_INTERMEDIATE 90000			// ~2 T2 part heaters
+#define HEATING_POWER_ADVANCED 250000				// ~2 T3 part heaters
+#define HEATING_POWER_EXPERIMENTAL 500000			// ~2 T4 part heaters
+#define BSM_MAX_HEATING_TEMPERATURE 10000			// 10,000 K, the device can't heat up the environment more than this. It will probably break and burn before anyway.
+
 /obj/machinery/mineral/bluespace_miner
 	name = "bluespace mining machine"
 	desc = "A machine that uses the magic of Bluespace to slowly generate materials and add them to a linked ore silo."
@@ -25,6 +35,7 @@
 	idle_power_usage = 200					// 0.2 kW
 	active_power_usage = 200000				// 200 kW on low. This machine will be /heavy/ on the grid.
 	var/halting_message = "Unknown Error"	// Latest reason for shutdown
+	var/heat_generation_rate				// Determined in refresh_properties()
 
 	// Percentage efficiencies
 	var/harvesting_mult
@@ -129,14 +140,20 @@
 
 /obj/machinery/mineral/bluespace_miner/proc/refresh_properties() // For setting power usage etc
 	switch(selected_mode) // Power usage is dependent on mode
-		if(1) // Simple, 200 kW
-			active_power_usage = 200000 * power_usage_mult
-		if(2) // Intermediate, 400 kW
-			active_power_usage = 400000 * power_usage_mult
-		if(3) // Advanced, 600 kW
-			active_power_usage = 600000 * power_usage_mult
-		if(4) // Experimental, 250 kW, less power due to increased danger
-			active_power_usage = 250000 * power_usage_mult
+		if(1) // Simple
+			active_power_usage = BSM_POWER_USAGE_SIMPLE
+			heat_generation_rate = HEATING_POWER_SIMPLE
+		if(2) // Intermediate
+			active_power_usage = BSM_POWER_USAGE_INTERMEDIATE
+			heat_generation_rate = HEATING_POWER_INTERMEDIATE
+		if(3) // Advanced
+			active_power_usage = BSM_POWER_USAGE_ADVANCED
+			heat_generation_rate = HEATING_POWER_ADVANCED
+		if(4) // Experimental
+			active_power_usage = BSM_POWER_USAGE_EXPERIMENTAL
+			heat_generation_rate = HEATING_POWER_EXPERIMENTAL
+		active_power_usage *= power_usage_mult
+		heat_generation_rate *= heat_generation_mult
 
 /obj/machinery/mineral/bluespace_miner/proc/deactivate_miner()
 	if(currently_active)
@@ -161,6 +178,8 @@
 		. += "<span class='warning'>Ore silo access is on hold, please contact the quartermaster.</span>"
 
 /obj/machinery/mineral/bluespace_miner/process()
+	var/turf/L = loc
+	// Shutdown reasons here
 	if(!materials?.silo || materials?.on_hold() || !mat_container)
 		halting_message = "Ore Silo Interfacing Failure"
 		deactivate_miner()
@@ -174,10 +193,31 @@
 		halting_message = "Power Supply System Failure"
 		deactivate_miner()
 		return
+	if(!istype(L))
+		halting_message = "Unknown Local Bluespace Error"
+		deactivate_miner()
+		return
 
+	if(heat_generation_rate)
+		handle_heat_generation(L)
 	
 	var/datum/material/ore = pick(ore_rates)
 	mat_container.bsm_insert((ore_rates[ore] * 1000), ore)
+
+/obj/machinery/mineral/bluespace_miner/proc/handle_heat_generation(var/turf/L) // Oh god oh fuck atmos code
+	// Inspiration taken from thermomachine.dm and spaceheater.dm
+	var/datum/gas_mixture/env = L.return_air()
+	var/heat_capacity = env.heat_capacity()
+	var/bsm_heating_power = abs(BSM_MAX_HEATING_TEMPERATURE - env.temperature) * heat_capacity
+	bsm_heating_power = min(heat_generation_rate, bsm_heating_power)
+
+	if(requiredPower < 1)
+		return
+	
+	var/deltaTemperature = bsm_heating_power / heat_capacity
+	if(deltaTemperature)
+		env.temperature += deltaTemperature
+		air_update_turf()
 
 /datum/component/material_container/proc/bsm_insert(amt, var/datum/material/mat)
 	if(!istype(mat))
