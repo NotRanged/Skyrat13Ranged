@@ -15,21 +15,22 @@
 	var/laser_efficiency = 1		// Reduces power consumption, but increases heat generation
 	var/bin_efficiency = 1			// Combined with scanner, unlocks better harvest modes, reduces hear generation
 	var/scanner_efficiency = 1		// Combined with bins, unlocks better harvest modes
-	var/unlocked_modes = 1			// Simple, Intermediate, Advanced, Experimental
+	var/unlocked_mode = 1			// Simple, Intermediate, Advanced, Experimental
 
 	// Operation
 	power_channel = EQUIP
 	use_power = IDLE_POWER_USE
-	var/currently_active = FALSE	// Toggle with empty hand click
-	var/selected_mode = 1			// Toggle with alt-click, can only change while offline
-	idle_power_usage = 200			// 0.2 kW
-	active_power_usage = 200000		// 200 kW. This machine will be /heavy/ on the grid.
+	var/currently_active = FALSE			// Toggle with empty hand click
+	var/selected_mode = 1					// Toggle with alt-click, can only change while offline
+	idle_power_usage = 200					// 0.2 kW
+	active_power_usage = 200000				// 200 kW on low. This machine will be /heavy/ on the grid.
+	var/halting_message = "Unknown Error"	// Latest reason for shutdown
 
 	// Percentage efficiencies
-	var/harvesting_rate
-	var/gas_usage_rate
-	var/heat_generation_rate
-	var/power_usage_rate
+	var/harvesting_mult
+	var/gas_usage_mult
+	var/heat_generation_mult
+	var/power_usage_mult
 
 /obj/machinery/mineral/bluespace_miner/Initialize(mapload)
 	. = ..()
@@ -42,6 +43,11 @@
 /obj/machinery/mineral/bluespace_miner/Destroy()
 	materials = null
 	QDEL_NULL(Radio)
+	STOP_PROCESSING(SSmachines, src)
+	return ..()
+
+/obj/machinery/mineral/bluespace_miner/deconstruct()
+	STOP_PROCESSING(SSmachines, src)
 	return ..()
 
 /obj/machinery/mineral/bluespace_miner/RefreshParts()
@@ -54,13 +60,13 @@
 		unlock_rating += S.rating
 	switch(unlock_rating)
 		if(1 to 2)
-			unlocked_modes = 1
+			unlocked_mode = 1
 		if(3 to 4)
-			unlocked_modes = 2
+			unlocked_mode = 2
 		if(5 to 6)
-			unlocked_modes = 3
+			unlocked_mode = 3
 		if(7 to 8)
-			unlocked_modes = 4
+			unlocked_mode = 4
 	
 	// Other components relating to efficiency of the machine
 	for(var/obj/item/stock_parts/manipulator/MA in component_parts)
@@ -69,18 +75,34 @@
 		laser_efficiency = ML.rating
 
 	// Percentage efficiencies compared to full T1
-	harvesting_rate = 1 + (manipulator_efficiency * 0.25) - 0.25 	// 25% increase per manipulator tier
-	gas_usage_rate = 1 + (manipulator_efficiency * 0.1) - 0.1 		// 10% per manipulator tier
-	heat_generation_rate = 1 + (manipulator_efficiency * 0.1) + (laser_efficiency * 0.3) - (bin_efficiency * 0.1) - 0.3
-	power_usage_rate = 1 + (manipulator_efficiency * 0.2) - (laser_efficiency * 0.25) + 0.05 // Minimum possible is 0.25
+	harvesting_mult = 1 + (manipulator_efficiency * 0.25) - 0.25 	// 25% increase per manipulator tier
+	gas_usage_mult = 1 + (manipulator_efficiency * 0.1) - 0.1 		// 10% per manipulator tier
+	heat_generation_mult = 1 + (manipulator_efficiency * 0.1) + (laser_efficiency * 0.3) - (bin_efficiency * 0.1) - 0.3
+	power_usage_mult = 1 + (manipulator_efficiency * 0.2) - (laser_efficiency * 0.25) + 0.05 // Minimum possible is 0.25
+	refresh_properties()
 
 /obj/machinery/mineral/bluespace_miner/interact(mob/user) // Open hand click to toggle the miner
 	if(anchored)
 		if(currently_active)
 			deactivate_miner()
+			halting_message = "Manual Shutdown"
 			return
-		
-		// TODO
+
+		if(selected_mode > unlocked_mode)
+			say("Harvesting mode unavailable with current parts. More advanced scanning or bin systems required.")
+			return
+
+		if(!is_operational())
+			to_chat(user, "<span class='warning'>[src] has to be on to do this!</span>")
+			return
+
+		// Activate the BS miner
+		currently_active = TRUE
+		use_power = ACTIVE_POWER_USE
+		START_PROCESSING(SSmachines, src)
+		// Notify both science and engineering, due to the powerdraw.
+		Radio.talk_into(src, "Bluespace miner activated at ([src.x], [src.y], [src.z]). Estimated power usage: [active_power_usage / 1000] kilowatts.", RADIO_CHANNEL_ENGINEERING)
+		Radio.talk_into(src, "Bluespace miner activated at ([src.x], [src.y], [src.z]). Estimated power usage: [active_power_usage / 1000] kilowatts.", RADIO_CHANNEL_SCIENCE)
 
 	else
 		to_chat(user, "<span class='warning'>The [src.name] must be anchored first!</span>")
@@ -96,20 +118,33 @@
 		selected_mode = 1
 	switch(selected_mode)
 		if(1)
-			Say("Harvesting mode set to 'Low'.")
+			say("Harvesting mode set to 'Simple'.")
 		if(2)
-			Say("Harvesting mode set to 'Intermediate'.")
+			say("Harvesting mode set to 'Intermediate'.")
 		if(3)
-			Say("Harvesting mode set to 'Advanced'. Caution is advised.")
+			say("Harvesting mode set to 'Advanced'. Caution is advised.")
 		if(4)
-			Say("Harvesting mode set to 'Experimental'. Caution is advised.")
+			say("Harvesting mode set to 'Experimental'. Caution is advised.")
+	refresh_properties()
 
+/obj/machinery/mineral/bluespace_miner/proc/refresh_properties() // For setting power usage etc
+	switch(selected_mode) // Power usage is dependent on mode
+		if(1) // Simple, 200 kW
+			active_power_usage = 200000 * power_usage_mult
+		if(2) // Intermediate, 400 kW
+			active_power_usage = 400000 * power_usage_mult
+		if(3) // Advanced, 600 kW
+			active_power_usage = 600000 * power_usage_mult
+		if(4) // Experimental, 250 kW, less power due to increased danger
+			active_power_usage = 250000 * power_usage_mult
 
 /obj/machinery/mineral/bluespace_miner/proc/deactivate_miner()
 	if(currently_active)
 		currently_active = FALSE
 		use_power = IDLE_POWER_USE
 		audible_message("The [src] whirrs as it shuts down.")
+		Radio.talk_into(src, "Bluespace miner deactivated at ([src.x], [src.y], [src.z]). Reason printed onto console.", RADIO_CHANNEL_SCIENCE)
+		STOP_PROCESSING(SSmachines, src)
 		return
 
 /obj/machinery/mineral/bluespace_miner/multitool_act(mob/living/user, obj/item/multitool/M)
@@ -126,11 +161,21 @@
 		. += "<span class='warning'>Ore silo access is on hold, please contact the quartermaster.</span>"
 
 /obj/machinery/mineral/bluespace_miner/process()
-	if(!materials?.silo || materials?.on_hold())
+	if(!materials?.silo || materials?.on_hold() || !mat_container)
+		halting_message = "Ore Silo Interfacing Failure"
+		deactivate_miner()
 		return
 	var/datum/component/material_container/mat_container = materials.mat_container
-	if(!mat_container || panel_open || !powered())
+	if(panel_open)
+		halting_message = "Open Maintenance Panel detected"
+		deactivate_miner()
 		return
+	if(!is_operational() || !powered())
+		halting_message = "Power Supply System Failure"
+		deactivate_miner()
+		return
+
+	
 	var/datum/material/ore = pick(ore_rates)
 	mat_container.bsm_insert((ore_rates[ore] * 1000), ore)
 
