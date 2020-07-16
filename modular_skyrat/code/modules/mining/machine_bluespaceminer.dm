@@ -36,6 +36,7 @@
 	active_power_usage = 200000				// 200 kW on low. This machine will be /heavy/ on the grid.
 	var/halting_message = "Unknown Error"	// Latest reason for shutdown
 	var/heat_generation_rate				// Determined in refresh_properties()
+	var/plasma_consumption_rate
 
 	// Percentage efficiencies
 	var/harvesting_mult
@@ -198,11 +199,21 @@
 		deactivate_miner()
 		return
 
+	if(!handle_atmos_interaction(L)) // Gas consumption for advanced/experimental mode
+		deactivate_miner()
+		return
+
 	if(heat_generation_rate)
 		handle_heat_generation(L)
 	
 	var/datum/material/ore = pick(ore_rates)
 	mat_container.bsm_insert((ore_rates[ore] * 1000), ore)
+
+/obj/machinery/mineral/bluespace_miner/proc/handle_atmos_interaction(var/turf/L)
+	if(selected_mode == 1 || selected_mode == 2)
+		return TRUE // These modes do not consume gas
+	
+
 
 /obj/machinery/mineral/bluespace_miner/proc/handle_heat_generation(var/turf/L) // Oh god oh fuck atmos code
 	// Inspiration taken from thermomachine.dm and spaceheater.dm
