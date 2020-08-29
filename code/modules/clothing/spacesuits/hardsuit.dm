@@ -87,6 +87,11 @@
 	. = ..()
 	display_visor_message("[severity > 1 ? "Light" : "Strong"] electromagnetic pulse detected!")
 
+/*/obj/item/clothing/head/helmet/space/hardsuit/reskin_obj(mob/M) // Skyrat edit
+	mutantrace_variation = FALSE // No weird path fuckery please
+	..()
+	if(icon_state == initial(icon_state))
+		mutantrace_variation = initial(mutantrace_variation)*/
 
 /obj/item/clothing/suit/space/hardsuit
 	name = "hardsuit"

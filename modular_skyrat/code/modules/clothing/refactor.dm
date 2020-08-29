@@ -193,6 +193,23 @@
 
 /obj/item/clothing/head/helmet/space/hardsuit/engine
 	armor = list("melee" = 30, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 10, "bio" = 100, "rad" = 75, "fire" = 100, "acid" = 75)
+	always_reskinnable = TRUE
+	unique_reskin_worn = list(
+	"Default" = 'icons/mob/clothing/head.dmi',
+	"Feline" = 'modular_skyrat/icons/mob/clothing/head.dmi',
+	)
+	unique_hardsuit_type = list(
+	"Default" = "engineering",
+	"Feline" = "engifeline",
+	)
+	unique_reskin_worn_anthro = list(
+	"Default" = 'icons/mob/clothing/head_muzzled.dmi',
+	"Feline" = 'modular_skyrat/icons/mob/clothing/head.dmi',
+	)
+	unique_reskin = list(
+	"Default" = "hardsuit0-engineering",
+	"Feline" = "hardsuit0-engifeline"
+	)
 
 /obj/item/clothing/suit/space/hardsuit/engine
 	armor = list("melee" = 30, "bullet" = 5, "laser" = 10, "energy" = 20, "bomb" = 10, "bio" = 100, "rad" = 75, "fire" = 100, "acid" = 75)
