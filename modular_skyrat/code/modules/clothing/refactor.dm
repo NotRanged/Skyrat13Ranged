@@ -196,19 +196,19 @@
 	always_reskinnable = TRUE
 	unique_reskin_worn = list(
 	"Default" = 'icons/mob/clothing/head.dmi',
-	"Feline" = 'modular_skyrat/icons/mob/clothing/head.dmi',
+	"Mammal Short Snout" = 'modular_skyrat/icons/mob/clothing/hardsuithelmet_reskins.dmi',
 	)
 	unique_hardsuit_type = list(
 	"Default" = "engineering",
-	"Feline" = "engifeline",
+	"Mammal Short Snout" = "engishortsnout",
 	)
 	unique_reskin_worn_anthro = list(
 	"Default" = 'icons/mob/clothing/head_muzzled.dmi',
-	"Feline" = 'modular_skyrat/icons/mob/clothing/head.dmi',
+	"Mammal Short Snout" = 'modular_skyrat/icons/mob/clothing/hardsuithelmet_reskins.dmi',
 	)
 	unique_reskin = list(
 	"Default" = "hardsuit0-engineering",
-	"Feline" = "hardsuit0-engifeline"
+	"Mammal Short Snout" = "hardsuit0-engishortsnout"
 	)
 
 /obj/item/clothing/suit/space/hardsuit/engine
